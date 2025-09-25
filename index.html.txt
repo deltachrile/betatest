@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사업 신청 및 관리 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .view-section {
+            display: none;
+        }
+        .status-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .status-제출됨 { background-color: #fcd34d; color: #78350f; } /* yellow */
+        .status-검토대기 { background-color: #93c5fd; color: #1e40af; } /* blue */
+        .status-선정 { background-color: #a7f3d0; color: #065f46; } /* green */
+        .status-미선정 { background-color: #fecaca; color: #991b1b; } /* red */
+        .status-교부신청 { background-color: #d1d5db; color: #374151; } /* gray */
+        .status-교부결정 { background-color: #93c5fd; color: #1e40af; } /* blue */
+        .status-실적보고서제출 { background-color: #a7f3d0; color: #065f46; } /* green */
+
+        .back-button {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 min-h-screen flex items-start justify-center">
+
+<div class="container mx-auto mt-8 p-6 bg-white rounded-xl shadow-2xl relative">
+    <!-- 뒤로가기 버튼 -->
+    <button id="back-btn" class="back-button px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hidden hover:bg-gray-300">← 뒤로</button>
+
+    <!-- 사용자 정보 및 관리자 모드 토글 -->
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold text-center text-gray-800">사업 신청 및 관리 시스템</h1>
+        <div class="mt-4 text-center text-gray-600">
+            <span id="user-info">로딩 중...</span>
+        </div>
+        <div id="admin-toggle-container" class="mt-4 text-center">
+            <!-- 관리자 모드 토글 버튼이 여기에 동적으로 추가됩니다 -->
+        </div>
+    </header>
+
+    <!-- 뷰 컨테이너 -->
+    <main>
+        <!-- 1. 사업 목록 화면 -->
+        <section id="business-list-view" class="view-section">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">사업 분야를 선택하세요</h2>
+            <div id="business-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- 사업 버튼이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </section>
+
+        <!-- 2. 담당자 목록 화면 -->
+        <section id="manager-list-view" class="view-section">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">담당자를 선택하세요</h2>
+            <div id="manager-list" class="grid grid-cols-2 gap-4">
+                <!-- 담당자 버튼이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </section>
+
+        <!-- 3. 신청 옵션 화면 -->
+        <section id="options-view" class="view-section">
+            <h2 id="options-title" class="text-2xl font-semibold text-gray-700 mb-4 text-center">무엇을 도와드릴까요?</h2>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                <button id="new-app-btn" class="w-full py-4 px-6 bg-indigo-600 text-white rounded-xl shadow-md font-bold text-lg hover:bg-indigo-700 transition">신규사업 신청</button>
+                <button id="status-check-btn" class="w-full py-4 px-6 bg-gray-600 text-white rounded-xl shadow-md font-bold text-lg hover:bg-gray-700 transition">진행현황</button>
+            </div>
+        </section>
+
+        <!-- 4. 신규사업 신청 화면 (폼) -->
+        <section id="application-form-view" class="view-section">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">신규사업 신청서</h2>
+            <form id="project-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">담당자</label>
+                    <span id="form-manager-name" class="font-bold text-gray-800"></span>
+                </div>
+                <div>
+                    <label for="applicant-name" class="block text-sm font-medium text-gray-700">이름</label>
+                    <input type="text" id="applicant-name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                </div>
+                <div>
+                    <label for="phone-number" class="block text-sm font-medium text-gray-700">전화번호</label>
+                    <input type="tel" id="phone-number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                </div>
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700">주소</label>
+                    <input type="text" id="address" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                </div>
+                <div>
+                    <label for="project-name" class="block text-sm font-medium text-gray-700">세부사업명</label>
+                    <input type="text" id="project-name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                </div>
+                <div>
+                    <label for="estimated-cost" class="block text-sm font-medium text-gray-700">견적금액 (원)</label>
+                    <input type="number" id="estimated-cost" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" min="0">
+                    <div class="mt-2 text-sm text-gray-600">
+                        <p>보조금액: <span id="subsidy-amount" class="font-semibold">0</span>원</p>
+                        <p>자부담금액: <span id="self-funded-amount" class="font-semibold">0</span>원</p>
+                    </div>
+                </div>
+                <div>
+                    <label for="bank-name" class="block text-sm font-medium text-gray-700">은행</label>
+                    <input type="text" id="bank-name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                </div>
+                <div>
+                    <label for="bank-account" class="block text-sm font-medium text-gray-700">계좌번호</label>
+                    <input type="text" id="bank-account" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                </div>
+                <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">신청 제출</button>
+            </form>
+        </section>
+
+        <!-- 5. 진행 현황 화면 -->
+        <section id="status-check-view" class="view-section">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">진행 현황 검색</h2>
+            <form id="status-search-form" class="flex space-x-2 mb-6">
+                <input type="text" id="search-name" placeholder="신청자 이름을 입력하세요..." class="flex-1 p-2 border border-gray-300 rounded-md">
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">검색</button>
+            </form>
+            <div id="search-results" class="space-y-4">
+                <!-- 검색 결과가 여기에 동적으로 추가됩니다 -->
+                <div class="text-center text-gray-400">검색 결과를 보려면 이름을 입력하세요.</div>
+            </div>
+        </section>
+
+        <!-- 6. 관리자 화면 -->
+        <section id="admin-view" class="view-section">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">관리자 패널</h2>
+            <div id="admin-applications-list" class="space-y-4">
+                <!-- 모든 신청 목록이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Custom Modal for Confirmation/Info (instead of alert) -->
+    <div id="modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-600 bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all">
+                <div class="text-lg font-bold mb-4" id="modal-title"></div>
+                <div class="text-gray-700 mb-4" id="modal-message"></div>
+                <div class="flex justify-end space-x-2">
+                    <button id="modal-close" class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600">확인</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, where, updateDoc, doc, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 전역 변수들
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    if (Object.keys(firebaseConfig).length === 0) {
+        console.error("Firebase config is missing.");
+    } else {
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let userId = null;
+        let isAdmin = false;
+        let isAuthReady = false;
+        let selectedBusiness = '';
+        let selectedManager = '';
+
+        // UI 요소들
+        const views = {
+            businessList: document.getElementById('business-list-view'),
+            managerList: document.getElementById('manager-list-view'),
+            options: document.getElementById('options-view'),
+            form: document.getElementById('application-form-view'),
+            statusCheck: document.getElementById('status-check-view'),
+            admin: document.getElementById('admin-view'),
+        };
+        const backBtn = document.getElementById('back-btn');
+        const userInfoEl = document.getElementById('user-info');
+        const adminToggleContainerEl = document.getElementById('admin-toggle-container');
+        const businessListEl = document.getElementById('business-list');
+        const managerListEl = document.getElementById('manager-list');
+        const optionsTitleEl = document.getElementById('options-title');
+        const newAppBtn = document.getElementById('new-app-btn');
+        const statusCheckBtn = document.getElementById('status-check-btn');
+        const formManagerNameEl = document.getElementById('form-manager-name');
+        const estimatedCostEl = document.getElementById('estimated-cost');
+        const subsidyAmountEl = document.getElementById('subsidy-amount');
+        const selfFundedAmountEl = document.getElementById('self-funded-amount');
+        const projectFormEl = document.getElementById('project-form');
+        const statusSearchForm = document.getElementById('status-search-form');
+        const searchNameInput = document.getElementById('search-name');
+        const searchResultsEl = document.getElementById('search-results');
+        const adminApplicationsListEl = document.getElementById('admin-applications-list');
+        const modalEl = document.getElementById('modal');
+        const modalTitleEl = document.getElementById('modal-title');
+        const modalMessageEl = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close');
+        
+        // 관리자 ID는 편의상 하드코딩되었습니다. 실제 앱에서는 더 복잡한 인증이 필요합니다.
+        const ADMIN_ID = 'your_admin_user_id'; 
+        
+        // 데이터
+        const businesses = ['경기한우명품화사업', '낙농산업경쟁력 강화사업', 'CCTV 등 방역 인프라 사업', '악취저감시설지원사업'];
+        const managers = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+        const statuses = ['제출됨', '검토대기', '선정', '미선정', '교부신청', '교부결정', '실적보고서제출'];
+
+        // --- 공통 기능 ---
+        const showModal = (title, message) => {
+            modalTitleEl.textContent = title;
+            modalMessageEl.textContent = message;
+            modalEl.classList.remove('hidden');
+        };
+        modalCloseBtn.addEventListener('click', () => modalEl.classList.add('hidden'));
+
+        // 뷰 전환 함수
+        const showView = (viewId) => {
+            // 모든 뷰를 숨깁니다.
+            Object.values(views).forEach(view => {
+                if (view) { // 뷰 요소가 존재하는지 확인
+                    view.style.display = 'none';
+                }
+            });
+            
+            // 요청된 뷰를 표시합니다.
+            const targetView = views[viewId];
+            if (targetView) { // 뷰 요소가 존재하는지 확인
+                targetView.style.display = 'block';
+            }
+
+            // 뒤로가기 버튼 가시성 토글
+            if (backBtn) {
+                backBtn.classList.toggle('hidden', viewId === 'businessList');
+            }
+        };
+
+        // 뒤로가기 버튼 기능
+        backBtn.addEventListener('click', () => {
+            if (views.managerList.style.display === 'block') {
+                showView('businessList');
+            } else if (views.options.style.display === 'block') {
+                showView('managerList');
+            } else if (views.form.style.display === 'block' || views.statusCheck.style.display === 'block') {
+                showView('options');
+            } else if (views.admin.style.display === 'block') {
+                showView('businessList');
+            }
+        });
+
+        // 사용자 인증 상태 감지 및 초기화
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                isAdmin = userId === ADMIN_ID; 
+                userInfoEl.textContent = `사용자 ID: ${userId}`;
+                isAuthReady = true;
+
+                // 관리자 모드 토글 버튼 추가 (Admin_ID가 지정된 경우에만)
+                if (ADMIN_ID !== 'your_admin_user_id') {
+                    const adminToggle = document.createElement('button');
+                    adminToggle.textContent = '관리자 모드';
+                    adminToggle.className = 'px-4 py-2 rounded-md font-semibold text-white bg-red-600 hover:bg-red-700 transition duration-200';
+                    adminToggleContainerEl.appendChild(adminToggle);
+                    adminToggle.addEventListener('click', () => {
+                        showView('admin');
+                        fetchAdminApplications();
+                    });
+                }
+                
+                showView('businessList');
+            } else {
+                console.log("사용자가 로그아웃되었습니다.");
+            }
+        });
+
+        // 익명으로 인증하거나 사용자 정의 토큰으로 로그인
+        const signIn = async () => {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log("사용자 정의 토큰으로 로그인되었습니다.");
+                } else {
+                    await signInAnonymously(auth);
+                    console.log("익명으로 로그인되었습니다.");
+                }
+            } catch (error) {
+                console.error("로그인 중 오류 발생:", error);
+            }
+        };
+        signIn();
+
+        // --- 1. 사업 목록 뷰 기능 ---
+        businesses.forEach(biz => {
+            const btn = document.createElement('button');
+            btn.textContent = biz;
+            btn.className = 'w-full py-4 px-6 bg-gray-200 rounded-xl shadow-md font-bold text-lg hover:bg-gray-300 transition';
+            btn.addEventListener('click', () => {
+                selectedBusiness = biz;
+                renderManagers();
+                showView('managerList');
+            });
+            businessListEl.appendChild(btn);
+        });
+
+        // --- 2. 담당자 목록 뷰 기능 ---
+        const renderManagers = () => {
+            managerListEl.innerHTML = '';
+            managers.forEach(mgr => {
+                const btn = document.createElement('button');
+                btn.textContent = `담당자 ${mgr}`;
+                btn.className = 'w-full py-4 px-6 bg-gray-200 rounded-xl shadow-md font-bold text-lg hover:bg-gray-300 transition';
+                btn.addEventListener('click', () => {
+                    selectedManager = `담당자 ${mgr}`;
+                    optionsTitleEl.textContent = `${selectedManager}에게 문의하기`;
+                    showView('options');
+                });
+                managerListEl.appendChild(btn);
+            });
+        };
+
+        // --- 3. 신청 옵션 뷰 기능 ---
+        newAppBtn.addEventListener('click', () => {
+            formManagerNameEl.textContent = selectedManager;
+            projectFormEl.reset();
+            subsidyAmountEl.textContent = '0';
+            selfFundedAmountEl.textContent = '0';
+            showView('application-form-view');
+        });
+
+        statusCheckBtn.addEventListener('click', () => {
+            showView('status-check-view');
+        });
+
+        // --- 4. 신규사업 신청 뷰 기능 ---
+        // 금액 자동 계산 (보조금 70%, 자부담 30% 가정)
+        estimatedCostEl.addEventListener('input', () => {
+            const cost = parseInt(estimatedCostEl.value) || 0;
+            const subsidy = Math.floor(cost * 0.7);
+            const selfFunded = cost - subsidy;
+            subsidyAmountEl.textContent = subsidy.toLocaleString();
+            selfFundedAmountEl.textContent = selfFunded.toLocaleString();
+        });
+
+        // 폼 제출
+        projectFormEl.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                applicantName: document.getElementById('applicant-name').value,
+                phoneNumber: document.getElementById('phone-number').value,
+                address: document.getElementById('address').value,
+                projectName: document.getElementById('project-name').value,
+                estimatedCost: estimatedCostEl.value,
+                subsidyAmount: subsidyAmountEl.textContent.replace(/,/g, ''),
+                selfFundedAmount: selfFundedAmountEl.textContent.replace(/,/g, ''),
+                bankName: document.getElementById('bank-name').value,
+                bankAccount: document.getElementById('bank-account').value,
+                business: selectedBusiness,
+                manager: selectedManager,
+                userId: userId,
+                status: '제출됨',
+                timestamp: serverTimestamp()
+            };
+
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/public/data/applications`), formData);
+                projectFormEl.reset();
+                showModal('신청 완료', '프로젝트 신청이 성공적으로 제출되었습니다.');
+                showView('businessList');
+            } catch (e) {
+                console.error("문서 추가 중 오류 발생: ", e);
+                showModal('오류 발생', '프로젝트 신청 중 오류가 발생했습니다.');
+            }
+        });
+
+        // --- 5. 진행 현황 뷰 기능 ---
+        statusSearchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const searchName = searchNameInput.value.trim();
+            if (searchName === '') {
+                searchResultsEl.innerHTML = '<div class="text-center text-gray-400">신청자 이름을 입력해주세요.</div>';
+                return;
+            }
+
+            try {
+                const q = query(collection(db, `artifacts/${appId}/public/data/applications`), where("applicantName", "==", searchName));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    searchResultsEl.innerHTML = '<div class="text-center text-gray-400">검색 결과가 없습니다.</div>';
+                } else {
+                    searchResultsEl.innerHTML = '';
+                    querySnapshot.forEach(doc => {
+                        const app = doc.data();
+                        const statusClass = `status-${app.status.replace(/\s/g, '')}`;
+                        const progressSteps = {
+                            '제출됨': '제출됨',
+                            '검토대기': '검토 대기 중',
+                            '선정': '선정 완료',
+                            '미선정': '미선정',
+                            '교부신청': '교부 신청서 제출',
+                            '교부결정': '교부 결정 완료',
+                            '실적보고서제출': '실적 보고서 제출 완료'
+                        };
+
+                        const detailsHtml = app.status === '선정' || app.status === '교부신청' || app.status === '교부결정' || app.status === '실적보고서제출' ? `
+                            <div class="mt-4 border-t border-gray-200 pt-4">
+                                <h4 class="font-semibold text-gray-700 mb-2">진행 단계</h4>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                                    <li class="${app.status === '교부신청' ? 'font-bold text-indigo-600' : ''}">교부 신청</li>
+                                    <li class="${app.status === '교부결정' ? 'font-bold text-indigo-600' : ''}">교부 결정</li>
+                                    <li class="${app.status === '실적보고서제출' ? 'font-bold text-indigo-600' : ''}">실적 보고서 제출</li>
+                                </ul>
+                            </div>
+                        ` : '';
+
+                        const card = document.createElement('div');
+                        card.className = 'p-4 border rounded-xl shadow-md bg-white';
+                        card.innerHTML = `
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800">${app.projectName}</h3>
+                                <div class="status-pill ${statusClass}">${app.status}</div>
+                            </div>
+                            <div class="text-sm text-gray-500 mb-2">담당자: ${app.manager}</div>
+                            <div class="text-sm text-gray-500 mb-2">신청자: ${app.applicantName}</div>
+                            ${detailsHtml}
+                        `;
+                        searchResultsEl.appendChild(card);
+                    });
+                }
+            } catch (e) {
+                console.error("검색 중 오류 발생:", e);
+                showModal('검색 오류', '데이터를 불러오는 중 문제가 발생했습니다.');
+            }
+        });
+
+        // --- 6. 관리자 패널 뷰 기능 ---
+        const fetchAdminApplications = () => {
+             // 보안 규칙에 따라 모든 데이터를 읽습니다.
+            const applicationsRef = collection(db, `artifacts/${appId}/public/data/applications`);
+            const q = query(applicationsRef, orderBy('timestamp', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAdminList(applications);
+            });
+        };
+
+        const renderAdminList = (applications) => {
+            adminApplicationsListEl.innerHTML = '';
+            if (!applications || applications.length === 0) {
+                adminApplicationsListEl.innerHTML = '<div class="text-center text-gray-400 p-8">아직 신청된 프로젝트가 없습니다.</div>';
+                return;
+            }
+
+            applications.forEach(app => {
+                const statusClass = `status-${app.status.replace(/\s/g, '')}`;
+                const card = document.createElement('div');
+                card.className = 'p-4 border rounded-xl shadow-md bg-white';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-lg font-semibold text-gray-800">${app.projectName}</h3>
+                        <div class="status-pill ${statusClass}">${app.status}</div>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        <p><strong>담당자:</strong> ${app.manager}</p>
+                        <p><strong>신청자:</strong> ${app.applicantName}</p>
+                        <p><strong>견적금액:</strong> ${app.estimatedCost}원</p>
+                    </div>
+                    <div class="mt-4 flex items-center space-x-2">
+                        <select id="admin-status-select-${app.id}" class="rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 p-1 text-sm">
+                            ${statuses.map(s => `<option value="${s}" ${app.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                        </select>
+                        <button class="update-status-btn px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600" data-id="${app.id}">상태 변경</button>
+                    </div>
+                `;
+                adminApplicationsListEl.appendChild(card);
+            });
+
+            // 상태 변경 버튼 이벤트 리스너 추가
+            document.querySelectorAll('.update-status-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const appId = e.target.dataset.id;
+                    const newStatus = document.getElementById(`admin-status-select-${appId}`).value;
+                    const appRef = doc(db, `artifacts/${appId}/public/data/applications`, appId);
+                    
+                    try {
+                        await updateDoc(appRef, { status: newStatus });
+                        showModal('변경 성공', `프로젝트 상태가 '${newStatus}'로 변경되었습니다.`);
+                    } catch (e) {
+                        console.error("문서 업데이트 중 오류 발생:", e);
+                        showModal('오류 발생', '상태 변경 중 오류가 발생했습니다.');
+                    }
+                });
+            });
+        };
+    }
+</script>
+</body>
+</html>
